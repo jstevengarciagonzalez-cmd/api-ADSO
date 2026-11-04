@@ -1,0 +1,13 @@
+ENDPOINTS DE LA API
+
+1. Registro de usuarios
+Metodo: POST
+URL: http://localhost:3000/api/registro
+Body: {"usuario": "jhon", "password": "123"}
+Respuesta: 201 Created
+
+2. Autenticacion / Login
+Metodo: POST
+URL: http://localhost:3000/api/login
+Body: {"usuario": "jhon", "password": "123"}
+Respuesta: 200 OK

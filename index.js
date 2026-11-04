@@ -1,53 +1,40 @@
 const express = require('express');
-const app = express();
-const PORT = 3000;
+const mysql = require('mysql2');
 
+const app = express();
 app.use(express.json());
 
-// Arreglo temporal para usuarios
-const usuarios = [];
+// Conexión directa a MySQL
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '1014',
+  database: 'api_adso'
+});
 
-// Endpoint de Registro
+// 1. Registro
 app.post('/api/registro', (req, res) => {
-    const { usuario, password } = req.body;
+  const { usuario, password } = req.body;
+  if (!usuario || !password) return res.status(400).json({ mensaje: "Error en la autenticacion" });
 
-    // Validar campos obligatorios
-    if (!usuario || !password) {
-        return res.status(400).json({ mensaje: 'Usuario y contraseña requeridos' });
-    }
-
-    // Validar si el usuario existe
-    const existe = usuarios.find(u => u.usuario === usuario);
-    if (existe) {
-        return res.status(409).json({ mensaje: 'El usuario ya existe' });
-    }
-
-    // Guardar usuario
-    usuarios.push({ usuario, password });
-    return res.status(201).json({ mensaje: 'Usuario registrado con exito' });
+  db.query('INSERT INTO usuarios (usuario, password) VALUES (?, ?)', [usuario, password], (err) => {
+    if (err) return res.status(400).json({ mensaje: "Error al registrar el usuario" });
+    res.status(201).json({ mensaje: "Usuario registrado con exito" });
+  });
 });
 
-// Endpoint de Login
+// 2. Login
 app.post('/api/login', (req, res) => {
-    const { usuario, password } = req.body;
+  const { usuario, password } = req.body;
+  if (!usuario || !password) return res.status(400).json({ mensaje: "Error en la autenticacion" });
 
-    // Validar campos obligatorios
-    if (!usuario || !password) {
-        return res.status(400).json({ mensaje: 'Error en la autenticacion' });
-    }
-
-    // Buscar coincidencia de credenciales
-    const valido = usuarios.find(u => u.usuario === usuario && u.password === password);
-
-    // Respuesta de autenticacion segun la guia
-    if (valido) {
-        return res.status(200).json({ mensaje: 'Autenticacion satisfactoria' });
+  db.query('SELECT * FROM usuarios WHERE usuario = ? AND password = ?', [usuario, password], (err, rows) => {
+    if (rows && rows.length > 0) {
+      res.status(200).json({ mensaje: "Autenticacion satisfactoria" });
     } else {
-        return res.status(401).json({ mensaje: 'Error en la autenticacion' });
+      res.status(401).json({ mensaje: "Error en la autenticacion" });
     }
+  });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log(`Servidor en puerto ${PORT}`);
-});
+app.listen(3000, () => console.log('Servidor en puerto 3000 con MySQL'));
